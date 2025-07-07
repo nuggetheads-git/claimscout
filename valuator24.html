@@ -1,1 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Unpatented Mining Claim Valuator by Nugget Heads - a simple risk assessment and valuation tool for mining claims.">
+    <meta name="keywords" content="mining claim, valuation, unpatented, Nugget Heads">
+    <title>Claim Valuator - Nugget Heads</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Load React libraries (production builds) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Load Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    
+    <!-- Load Babel for JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the slider thumb to ensure consistent appearance */
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2563EB; /* blue-600 */
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+            transition: background-color 0.2s;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #2563EB; /* blue-600 */
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+        .slider-thumb:hover::-webkit-slider-thumb {
+            background: #1D4ED8; /* blue-700 */
+        }
+         .slider-thumb:hover::-moz-range-thumb {
+            background: #1D4ED8; /* blue-700 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useCallback, useEffect, useRef } = React;
+
+        // --- Constants for Valuation Logic ---
+        const BASE_VALUE_PER_ACRE = 50;
+        const LOCATION_QUALITY_LOW_ADJUSTMENT = -0.15;
+        const LOCATION_QUALITY_MEDIUM_ADJUSTMENT = -0.05;
+        const LOCATION_QUALITY_HIGH_ADJUSTMENT = 0.05;
+        const DISTANCE_CLOSE_ADJUSTMENT = 0;
+        const DISTANCE_MEDIUM_ADJUSTMENT = -100;
+        const DISTANCE_FAR_ADJUSTMENT = -250;
+        const DATE_FILED_RECENT_ADJUSTMENT = -0.30;
+        const DATE_FILED_MODERATE_ADJUSTMENT = -0.15;
+        const EXPERIENCE_LOW_ADJUSTMENT = -0.20;
+        const EXPERIENCE_HIGH_ADJUSTMENT = 50;
+
+        // --- Inline SVG Icon Components ---
+        const MiningPickIcon = ({ size = 24, className = '', ...props }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 256 256" fill="currentColor" className={className} {...props}>
+            <path d="M216.7,93.9,141.9,28.7a8.2,8.2,0,0,0-11.4,0L96,63.2,63.2,32.7a8.2,8.2,0,0,0-11.4,0L28.7,55.8a8.2,8.2,0,0,0,0,11.4L64,102.4,28.7,137.7a8.2,8.2,0,0,0,0,11.4l23.1,23.1a8.2,8.2,0,0,0,11.4,0L98.5,138l34.3,34.3a8.2,8.2,0,0,0,11.4,0l34.3-34.3,34.4,34.3a8.2,8.2,0,0,0,11.4,0l23.1-23.1a8.2,8.2,0,0,0,0-11.4l-35.3-35.4,35.2-35.2A8.2,8.2,0,0,0,216.7,93.9Z"/>
+          </svg>
+        );
+
+        const HelpCircleIcon = ({ size = 24, className = '', ...props }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+            <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" />
+          </svg>
+        );
+
+        const ResetIcon = ({ size = 24, className = '', ...props }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+            <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+          </svg>
+        );
+
+        // --- Layout Components ---
+        const Header = () => (
+            <header className="bg-white shadow-md sticky top-0 z-50">
+                <nav className="mx-auto px-6 py-4 flex justify-between items-center max-w-7xl">
+                    <a href="#" className="flex items-center space-x-3" onClick={(e) => e.preventDefault()}>
+                        <div className="bg-yellow-500 text-white p-2 rounded-lg">
+                            <MiningPickIcon />
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-900">Nugget Heads</h1>
+                    </a>
+                    <div className="hidden md:flex items-center space-x-6">
+                        <a href="#" onClick={(e) => e.preventDefault()} className="text-gray-600 font-semibold hover:text-yellow-600 transition duration-300">Home</a>
+                    </div>
+                </nav>
+            </header>
+        );
+
+        const Footer = () => (
+            <footer className="bg-white border-t border-gray-200 mt-auto">
+                <div className="mx-auto text-center py-6 px-6">
+                    <p className="text-gray-500">© {new Date().getFullYear()} Nugget Heads. All rights reserved.</p>
+                </div>
+            </footer>
+        );
+
+        // --- Main Application Component ---
+        function App() {
+          const [claimSize, setClaimSize] = useState(20);
+          const [hasAssay, setHasAssay] = useState(false);
+          const [locationQuality, setLocationQuality] = useState(75);
+          const [distance, setDistance] = useState(50);
+          const [dateFiled, setDateFiled] = useState(50);
+          const [experience, setExperience] = useState(50);
+          const chartRef = useRef(null);
+
+          const handleClaimSizeChange = useCallback((e) => {
+            const value = parseInt(e.target.value, 10) || 1;
+            setClaimSize(Math.max(1, Math.min(160, value)));
+          }, []);
+
+          const baseValue = useMemo(() => claimSize * BASE_VALUE_PER_ACRE, [claimSize]);
+
+          const distanceAdjustment = useMemo(() => {
+            if (distance < 40) return DISTANCE_CLOSE_ADJUSTMENT;
+            if (distance > 60) return DISTANCE_FAR_ADJUSTMENT;
+            return DISTANCE_MEDIUM_ADJUSTMENT;
+          }, [distance]);
+
+          const assayMultiplier = useMemo(() => (hasAssay ? 1.1 : 1.0), [hasAssay]);
+
+          const { totalValuation, locationAdjustment, dateFiledAdjustment, experienceAdjustment } = useMemo(() => {
+            let locAdjustment = 0, dateAdj = 0, expAdj = 0;
+            const subtotal = baseValue + distanceAdjustment;
+            let valuation = subtotal;
+
+            if (locationQuality < 25) { locAdjustment = valuation * LOCATION_QUALITY_LOW_ADJUSTMENT; }
+            else if (locationQuality < 75) { locAdjustment = valuation * LOCATION_QUALITY_MEDIUM_ADJUSTMENT; }
+            else { locAdjustment = valuation * LOCATION_QUALITY_HIGH_ADJUSTMENT; }
+            valuation += locAdjustment;
+
+            if (dateFiled < 40) { dateAdj = valuation * DATE_FILED_RECENT_ADJUSTMENT; }
+            else if (dateFiled <= 60) { dateAdj = valuation * DATE_FILED_MODERATE_ADJUSTMENT; }
+            else { dateAdj = 0; }
+            valuation += dateAdj;
+
+            if (experience < 40) { expAdj = valuation * EXPERIENCE_LOW_ADJUSTMENT; }
+            else if (experience > 60) { expAdj = EXPERIENCE_HIGH_ADJUSTMENT; }
+            else { expAdj = 0; }
+            valuation += expAdj;
+            
+            valuation *= assayMultiplier;
+
+            return {
+              totalValuation: Math.max(0, valuation),
+              locationAdjustment: locAdjustment,
+              dateFiledAdjustment: dateAdj,
+              experienceAdjustment: expAdj,
+            };
+          }, [baseValue, distanceAdjustment, locationQuality, dateFiled, experience, assayMultiplier]);
+
+          // --- Chart.js Integration ---
+          useEffect(() => {
+            if (!chartRef.current) return;
+            const ctx = chartRef.current.getContext('2d');
+            
+            // This function creates the floating bar data structure.
+            // For negative values, it returns [value, 0]. For positive, [0, value].
+            const createFloatingBar = (value) => (value >= 0 ? [0, value] : [value, 0]);
+
+            const chartData = {
+                labels: ['Base Value', 'Location', 'Distance', 'Date Filed', 'Experience', 'Total Valuation'],
+                datasets: [{
+                    label: 'Valuation Factors ($)',
+                    // Map the values to the floating bar format
+                    data: [
+                        createFloatingBar(baseValue),
+                        createFloatingBar(locationAdjustment),
+                        createFloatingBar(distanceAdjustment),
+                        createFloatingBar(dateFiledAdjustment),
+                        createFloatingBar(experienceAdjustment),
+                        createFloatingBar(totalValuation)
+                    ],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.7)',  // green-500 -> Base Value
+                        'rgba(139, 92, 246, 0.7)',  // purple-500 -> Location
+                        'rgba(239, 68, 68, 0.7)',   // red-500
+                        'rgba(245, 158, 11, 0.7)',  // amber-500
+                        'rgba(107, 114, 128, 0.7)', // gray-500
+                        'rgba(22, 163, 74, 0.9)'    // green-600 -> Total Valuation
+                    ],
+                    borderColor: [
+                        'rgba(4, 120, 87, 1)',      // green-700
+                        'rgba(107, 33, 168, 1)',    // purple-800
+                        'rgba(185, 28, 28, 1)',     // red-700
+                        'rgba(180, 83, 9, 1)',      // amber-700
+                        'rgba(75, 85, 99, 1)',      // gray-600
+                        'rgba(21, 128, 61, 1)'      // green-700
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const chartOptions = {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        ticks: { color: '#4B5563' }
+                    },
+                    x: { 
+                        // Note: beginAtZero is removed to allow the axis to show negative values
+                        title: { display: true, text: 'Amount ($)', color: '#4B5563' },
+                        ticks: { color: '#4B5563' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Valuation Breakdown', font: { size: 16 }, color: '#1F2937' }
+                }
+            };
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: chartOptions
+            });
+
+            return () => chart.destroy();
+          }, [baseValue, locationAdjustment, distanceAdjustment, dateFiledAdjustment, experienceAdjustment, totalValuation]);
+
+          const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+          
+          const getSliderLabel = (sliderValue, labels) => {
+            if (sliderValue < 40) return labels[0];
+            if (sliderValue > 60) return labels[2];
+            return labels[1];
+          };
+
+          return (
+            <div className="bg-gray-100 font-sans min-h-screen flex flex-col">
+              <Header />
+              <div className="p-4 sm:p-6 lg:p-8 flex-grow">
+                <div className="max-w-7xl mx-auto">
+                  <div className="text-center mb-8">
+                      <h1 className="text-3xl font-bold text-gray-800">Unpatented Mining Claim Valuator</h1>
+                      <p className="text-gray-500 mt-1">Simple Risk Assessment and Valuation Tool</p>
+                  </div>
+                  
+                  <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-800 p-4 mb-8 rounded-r-lg" role="alert">
+                      <p className="font-bold">Disclaimer</p>
+                      <p className="text-sm">The information provided by this app is not legal or financial advice. This app provides perspectives based on experience and common sense factors. You are responsible for the decisions you make when considering buying any mining claim.</p>
+                  </div>
+
+                  <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-6">Claim Information</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Claim Type</label>
+                            <div className="flex items-center">
+                              <input type="radio" id="unpatented" name="claimType" value="unpatented" checked disabled className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                              <label htmlFor="unpatented" className="ml-2 block text-sm text-gray-900">Unpatented Claim</label>
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="claim-size" className="block text-sm font-medium text-gray-700 mb-2">Claim Size (Acres) <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                              <input type="number" id="claim-size" value={claimSize} min="1" max="160"
+                                onChange={handleClaimSizeChange}
+                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-14"
+                              />
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500">acres</span>
+                            </div>
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Seller Has Provided Verifiable and Reputable Third Party Assay Data</label>
+                            <button onClick={() => setHasAssay(!hasAssay)} aria-pressed={hasAssay}
+                                    className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${hasAssay ? 'bg-blue-600' : 'bg-gray-200'}`}>
+                              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${hasAssay ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-6">Valuation Factors</h2>
+                        <div className="space-y-8">
+                          <CustomSlider label="Location Quality" value={locationQuality} onChange={setLocationQuality} labels={['Landlocked', '4x4 Access', 'Paved/Dirt Rd']} displayValue={`${locationQuality}%`} />
+                          <CustomSlider label="Distance from Your Location" value={distance} onChange={setDistance} labels={['< 50 mi', '51-100 mi', '> 100 mi']} displayValue={getSliderLabel(distance, ['< 50 miles', '51-100 miles', '> 100 miles'])} />
+                          <CustomSlider label="Date Claim Was Filed" value={dateFiled} onChange={setDateFiled} labels={['< 6 mos', '7-18 mos', '19+ mos']} displayValue={getSliderLabel(dateFiled, ['< 6 months', '7-18 months', '19+ months'])} />
+                          <CustomSlider label="Buyer's Experience" value={experience} onChange={setExperience} labels={['None', '1-5 yrs', '5+ yrs']} displayValue={getSliderLabel(experience, ['None', '1-5 years', '5+ years'])} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-1 space-y-8">
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 sticky top-24">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Estimated Valuation</h3>
+                            <p className="text-4xl font-bold text-blue-600">{formatCurrency(totalValuation)}</p>
+                            <p className="text-sm text-gray-500 mb-6">Based on {claimSize} acres</p>
+                            <div className="space-y-3">
+                                <FactorItem label="Location Quality" value={locationAdjustment} />
+                                <FactorItem label="Distance to Access" value={distanceAdjustment} />
+                                <FactorItem label="Date Filed" value={dateFiledAdjustment} />
+                                <FactorItem label="Buyer's Experience" value={experienceAdjustment} />
+                                {hasAssay && <FactorItem label="Verified Assay Data" value={`x${assayMultiplier.toFixed(1)}`} special={true} />}
+                            </div>
+                            <hr className="my-6" />
+                            <div className="h-64">
+                                <canvas ref={chartRef}></canvas>
+                            </div>
+                        </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              <Footer />
+            </div>
+          );
+        }
+
+        function CustomSlider({ label, value, onChange, labels, displayValue }) {
+          const handleChange = useCallback((e) => {
+            const val = parseInt(e.target.value, 10);
+            if (!isNaN(val)) onChange(val);
+          }, [onChange]);
+
+          return (
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  {label}
+                  <button type="button" className="ml-2 text-gray-400 hover:text-blue-600" title={`Information about ${label}`}>
+                      <HelpCircleIcon size={16} />
+                  </button>
+                </label>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-semibold text-blue-600 w-24 text-right">{displayValue}</span>
+                  <button onClick={() => onChange(50)} className="text-gray-400 hover:text-gray-600" aria-label={`Reset ${label} to default`}>
+                    <ResetIcon size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <input type="range" min="0" max="100" value={value} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb" />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1 px-1">
+                <span>{labels[0]}</span>
+                <span>{labels[1]}</span>
+                <span>{labels[2]}</span>
+              </div>
+            </div>
+          );
+        }
+
+        function FactorItem({ label, value, special = false }) {
+            const isPositive = typeof value === 'number' && value > 0;
+            const isNegative = typeof value === 'number' && value < 0;
+            const valueColor = isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-700';
+            const dotColor = isPositive ? 'bg-green-500' : isNegative ? 'bg-red-500' : 'bg-gray-400';
+            const formattedValue = special 
+                ? value 
+                : `${isPositive ? '+' : ''}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)}`;
+            
+            return (
+                <li className="flex items-center justify-between text-sm">
+                    <div className="flex items-center">
+                        <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 ${special ? 'bg-blue-500' : dotColor}`}></span>
+                        <span className="text-gray-600">{label}</span>
+                    </div>
+                    <span className={`font-semibold ${special ? 'text-blue-600' : valueColor}`}>
+                        {formattedValue}
+                    </span>
+                </li>
+            );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>

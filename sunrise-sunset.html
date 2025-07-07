@@ -28,7 +28,7 @@
             
             <div class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Sunrise & Sunset Finder</h1>
-                <p class="text-slate-400 mt-2">Find solar times by city or coordinates.</p>
+                <p class="text-slate-400 mt-2">Find solar times by searching for a city.</p>
             </div>
 
             <!-- Input Form -->
@@ -47,30 +47,25 @@
                 <!-- OR Separator -->
                 <div class="relative flex py-2 items-center">
                     <div class="flex-grow border-t border-slate-700"></div>
-                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase">Or</span>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase">Resulting Coordinates</span>
                     <div class="flex-grow border-t border-slate-700"></div>
                 </div>
 
-                <!-- Manual Coordinates -->
+                <!-- Read-only Coordinates -->
                 <div>
                     <label for="latitude" class="block text-sm font-medium text-slate-300 mb-1">Latitude</label>
-                    <input type="text" id="latitude" value="33.67" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition duration-200">
+                    <input type="text" id="latitude" value="33.67" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
                 </div>
                 <div>
                     <label for="longitude" class="block text-sm font-medium text-slate-300 mb-1">Longitude</label>
-                    <input type="text" id="longitude" value="-112.24" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition duration-200">
+                    <input type="text" id="longitude" value="-112.24" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
                 </div>
             </div>
 
-            <button id="fetchButton" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                <span>Get Times for Coordinates</span>
-            </button>
-
             <!-- Results Display -->
-            <div id="results" class="mt-6 text-center min-h-[120px] flex items-center justify-center">
+            <div id="results" class="mt-8 text-center min-h-[160px]">
                 <!-- Loading spinner -->
-                <div id="loader" class="hidden">
+                <div id="loader" class="hidden flex items-center justify-center h-full">
                     <svg class="animate-spin h-8 w-8 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -78,17 +73,26 @@
                 </div>
                 <!-- Error Message -->
                 <div id="error" class="hidden text-red-400 bg-red-900/50 p-3 rounded-lg"></div>
-                <!-- Data -->
-                <div id="data" class="hidden w-full grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-200">
-                    <div class="bg-slate-800/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                        <svg class="w-12 h-12 text-yellow-400 sun-icon mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5c.28 0 .5.22.5.5v2c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-2c0-.28.22-.5.5-.5zM6.05 6.05a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L6.05 6.757a.5.5 0 0 1 0-.707zM4.5 12c.28 0 .5.22.5.5v0c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h2zM6.05 17.95a.5.5 0 0 1 0-.707l1.414-1.414a.5.5 0 0 1 .707.707l-1.414 1.414a.5.5 0 0 1-.707 0zM12 19.5c-.28 0-.5-.22-.5-.5v-2c0-.28.22-.5.5-.5s.5.22.5.5v2c0 .28-.22-.5.5-.5zM17.95 17.95a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM19.5 12c-.28 0-.5-.22-.5-.5h-2c-.28 0-.5.22-.5.5s.22.5.5.5h2c.28 0 .5-.22.5-.5zM17.95 6.05a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 1 1-.707.707L17.95 6.757a.5.5 0 0 1 0-.707zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/></svg>
-                        <h3 class="text-sm font-semibold text-slate-400">Sunrise</h3>
-                        <p id="sunrise-time" class="text-xl font-bold"></p>
+
+                <!-- This div will hold both the location name and the data grid -->
+                <div id="results-content" class="hidden w-full">
+                     <!-- Location Name -->
+                    <div class="mb-4">
+                        <p class="text-slate-400 text-sm">Showing results for:</p>
+                        <h2 id="location-name" class="text-xl md:text-2xl font-bold text-slate-100 truncate"></h2>
                     </div>
-                    <div class="bg-slate-800/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                        <svg class="w-12 h-12 text-indigo-300 moon-icon mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.75 3.25a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM8.243 4.543a.75.75 0 0 1 1.06 0l.354.353a.75.75 0 0 1-1.06 1.06l-.354-.353a.75.75 0 0 1 0-1.06zm7.514 0a.75.75 0 0 1 0 1.06l-.353.354a.75.75 0 0 1-1.06-1.06l.353-.354a.75.75 0 0 1 1.06 0zM4.25 8.75a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zm15.5 0a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM8.243 13.957a.75.75 0 0 1 1.06 0l.354.353a.75.75 0 1 1-1.06 1.06l-.354-.353a.75.75 0 0 1 0-1.06zm7.514 0a.75.75 0 0 1 0 1.06l-.353.354a.75.75 0 1 1-1.06-1.06l.353-.354a.75.75 0 0 1 1.06 0zM11.75 18.25a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM12 7.25a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5z"/></svg>
-                        <h3 class="text-sm font-semibold text-slate-400">Sunset</h3>
-                        <p id="sunset-time" class="text-xl font-bold"></p>
+                    <!-- Data -->
+                    <div id="data" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-200">
+                        <div class="bg-slate-800/50 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <svg class="w-12 h-12 text-yellow-400 sun-icon mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5c.28 0 .5.22.5.5v2c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-2c0-.28.22-.5.5-.5zM6.05 6.05a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L6.05 6.757a.5.5 0 0 1 0-.707zM4.5 12c.28 0 .5.22.5.5v0c0 .28-.22.5-.5.5h-2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h2zM6.05 17.95a.5.5 0 0 1 0-.707l1.414-1.414a.5.5 0 0 1 .707.707l-1.414 1.414a.5.5 0 0 1-.707 0zM12 19.5c-.28 0-.5-.22-.5-.5v-2c0-.28.22-.5.5-.5s.5.22.5.5v2c0 .28-.22-.5.5-.5zM17.95 17.95a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM19.5 12c-.28 0-.5-.22-.5-.5h-2c-.28 0-.5.22-.5.5s.22.5.5.5h2c.28 0 .5-.22.5-.5zM17.95 6.05a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 1 1-.707.707L17.95 6.757a.5.5 0 0 1 0-.707zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/></svg>
+                            <h3 class="text-sm font-semibold text-slate-400">Sunrise</h3>
+                            <p id="sunrise-time" class="text-xl font-bold"></p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <svg class="w-12 h-12 text-indigo-300 moon-icon mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.75 3.25a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM8.243 4.543a.75.75 0 0 1 1.06 0l.354.353a.75.75 0 0 1-1.06 1.06l-.354-.353a.75.75 0 0 1 0-1.06zm7.514 0a.75.75 0 0 1 0 1.06l-.353.354a.75.75 0 0 1-1.06-1.06l.353-.354a.75.75 0 0 1 1.06 0zM4.25 8.75a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zm15.5 0a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM8.243 13.957a.75.75 0 0 1 1.06 0l.354.353a.75.75 0 1 1-1.06 1.06l-.354-.353a.75.75 0 0 1 0-1.06zm7.514 0a.75.75 0 0 1 0 1.06l-.353.354a.75.75 0 1 1-1.06-1.06l.353-.354a.75.75 0 0 1 1.06 0zM11.75 18.25a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5a.75.75 0 0 1 .75-.75zM12 7.25a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5z"/></svg>
+                            <h3 class="text-sm font-semibold text-slate-400">Sunset</h3>
+                            <p id="sunset-time" class="text-xl font-bold"></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -111,13 +115,13 @@
         // --- DOM Element References ---
         const citySearchInput = document.getElementById('citySearch');
         const searchCityButton = document.getElementById('searchCityButton');
-        const fetchButton = document.getElementById('fetchButton');
         const latitudeInput = document.getElementById('latitude');
         const longitudeInput = document.getElementById('longitude');
         const resultsDiv = document.getElementById('results');
         const loader = document.getElementById('loader');
         const errorDiv = document.getElementById('error');
-        const dataDiv = document.getElementById('data');
+        const resultsContent = document.getElementById('results-content');
+        const locationName = document.getElementById('location-name');
         const sunriseTimeEl = document.getElementById('sunrise-time');
         const sunsetTimeEl = document.getElementById('sunset-time');
         const quoteContainer = document.getElementById('quote-container');
@@ -228,7 +232,7 @@
         function hideAllPanes() {
             loader.classList.add('hidden');
             errorDiv.classList.add('hidden');
-            dataDiv.classList.add('hidden');
+            resultsContent.classList.add('hidden');
             quoteContainer.classList.add('hidden');
         }
         
@@ -253,11 +257,11 @@
 
         /**
          * Fetches data from the global sunrise-sunset.org API.
-         * This is used as a fallback if NOAA fails.
          * @param {string} lat - Latitude
          * @param {string} lng - Longitude
+         * @param {string} cityName - The display name of the city
          */
-        async function getSunriseSunsetFromFallback(lat, lng) {
+        async function getSunriseSunsetFromFallback(lat, lng, cityName) {
             console.log("NOAA failed, using fallback API.");
             const apiUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`;
             try {
@@ -275,8 +279,9 @@
                     sunriseTimeEl.textContent = sunriseUTC.toLocaleTimeString([], timeFormatOptions);
                     sunsetTimeEl.textContent = sunsetUTC.toLocaleTimeString([], timeFormatOptions);
                     
+                    locationName.textContent = cityName;
                     hideAllPanes();
-                    dataDiv.classList.remove('hidden');
+                    resultsContent.classList.remove('hidden');
                     displayRandomQuote();
                 } else {
                     throw new Error(`Fallback API Error: ${data.status}`);
@@ -290,19 +295,19 @@
 
         /**
          * Fetches sunrise/sunset data, trying NOAA first and then a fallback.
+         * @param {string} cityName - The display name of the city
          */
-        async function getSunriseSunset() {
+        async function getSunriseSunset(cityName) {
             const lat = parseFloat(latitudeInput.value).toFixed(4);
             const lng = parseFloat(longitudeInput.value).toFixed(4);
 
             if (isNaN(lat) || isNaN(lng)) {
-                displayError('Please enter valid latitude and longitude.');
+                console.error("Invalid coordinates provided to getSunriseSunset:", lat, lng);
                 return;
             }
 
             hideAllPanes();
             loader.classList.remove('hidden');
-            fetchButton.disabled = true;
             searchCityButton.disabled = true;
 
             const headers = new Headers({ 'User-Agent': '(Sunrise Sunset App, your-email@example.com)' });
@@ -312,7 +317,6 @@
                 const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
                 const pointsResponse = await fetch(pointsUrl, { headers });
                 if (!pointsResponse.ok) {
-                    // This is the common failure point for non-US locations
                     throw new Error("NOAA data not available, attempting fallback.");
                 }
                 
@@ -358,16 +362,15 @@
                 sunriseTimeEl.textContent = sunriseUTC.toLocaleTimeString([], timeFormatOptions);
                 sunsetTimeEl.textContent = sunsetUTC.toLocaleTimeString([], timeFormatOptions);
                 
+                locationName.textContent = cityName;
                 hideAllPanes();
-                dataDiv.classList.remove('hidden');
+                resultsContent.classList.remove('hidden');
                 displayRandomQuote();
 
             } catch (error) {
                 console.error("NOAA fetch failed:", error.message);
-                // If NOAA fails for any reason, use the fallback
-                await getSunriseSunsetFromFallback(lat, lng);
+                await getSunriseSunsetFromFallback(lat, lng, cityName);
             } finally {
-                fetchButton.disabled = false;
                 searchCityButton.disabled = false;
             }
         }
@@ -384,7 +387,6 @@
             
             hideAllPanes();
             loader.classList.remove('hidden');
-            fetchButton.disabled = true;
             searchCityButton.disabled = true;
 
             const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
@@ -396,37 +398,33 @@
                     const location = geocodeData[0];
                     latitudeInput.value = parseFloat(location.lat).toFixed(4);
                     longitudeInput.value = parseFloat(location.lon).toFixed(4);
-                    citySearchInput.value = ''; 
-                    await getSunriseSunset(); 
+                    
+                    // Pass the formatted display name to the next function
+                    await getSunriseSunset(location.display_name); 
+                    
+                    citySearchInput.value = ''; // Clear input after search
                 } else {
                      throw new Error('City not found. Please try a more specific search.');
                 }
             } catch(error) {
                  console.error("Geocoding or data fetch failed:", error);
                  displayError(error.message);
-                 fetchButton.disabled = false;
                  searchCityButton.disabled = false;
             }
         }
 
         // --- Event Listeners ---
-        fetchButton.addEventListener('click', getSunriseSunset);
         searchCityButton.addEventListener('click', searchByCity);
         
         citySearchInput.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') searchByCity();
         });
-        latitudeInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') getSunriseSunset();
-        });
-        longitudeInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') getSunriseSunset();
-        });
-
 
         // --- Initial Load ---
         // Automatically fetch data for the default coordinates when the page loads.
-        window.onload = getSunriseSunset;
+        window.onload = () => {
+             getSunriseSunset("Peoria, AZ, USA");
+        };
 
     </script>
 </body>

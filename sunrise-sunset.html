@@ -54,11 +54,11 @@
                 <!-- Read-only Coordinates -->
                 <div>
                     <label for="latitude" class="block text-sm font-medium text-slate-300 mb-1">Latitude</label>
-                    <input type="text" id="latitude" value="20.80" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
+                    <input type="text" id="latitude" value="" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
                 </div>
                 <div>
                     <label for="longitude" class="block text-sm font-medium text-slate-300 mb-1">Longitude</label>
-                    <input type="text" id="longitude" value="-156.33" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
+                    <input type="text" id="longitude" value="" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 cursor-not-allowed">
                 </div>
             </div>
 
@@ -105,7 +105,7 @@
             </div>
             
             <div class="text-center mt-6">
-                 <p class="text-xs text-slate-500">Powered by the <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" class="underline hover:text-slate-400">NOAA API</a>, <a href="https://sunrise-sunset.org/api" target="_blank" class="underline hover:text-slate-400">sunrise-sunset.org</a> & <a href="https://openstreetmap.org" target="_blank" class="underline hover:text-slate-400">OpenStreetMap</a>.</p>
+                 <p class="text-xs text-slate-500">Powered by <a href="https://sunrise-sunset.org/api" target="_blank" class="underline hover:text-slate-400">sunrise-sunset.org</a> & <a href="https://openstreetmap.org" target="_blank" class="underline hover:text-slate-400">OpenStreetMap</a>.</p>
             </div>
 
         </div>
@@ -117,7 +117,6 @@
         const searchCityButton = document.getElementById('searchCityButton');
         const latitudeInput = document.getElementById('latitude');
         const longitudeInput = document.getElementById('longitude');
-        const resultsDiv = document.getElementById('results');
         const loader = document.getElementById('loader');
         const errorDiv = document.getElementById('error');
         const resultsContent = document.getElementById('results-content');
@@ -127,107 +126,35 @@
         const quoteContainer = document.getElementById('quote-container');
         const quoteText = document.getElementById('quote-text');
 
-        // --- Inspirational Quotes ---
+        // --- Inspirational Quotes (A curated selection) ---
         const quotes = [
-            "Start each day with a grateful heart, and watch the world open up to you.", "Your dreams are the seeds of your future; plant them with courage.", "Every sunrise is a canvas of new possibilities paint it boldly.",
-            "The smallest step forward today leads to the greatest leaps tomorrow.", "Embrace challenges as opportunities to grow stronger.", "Your potential is limitless when you believe in yourself.",
-            "Kindness is a spark that lights up the world around you.", "Today is a gift unwrap it with enthusiasm.", "The only limits are the ones you set for yourself.", "Let your actions today reflect the person you aspire to be.",
-            "Courage doesn't mean you're not afraid it means you keep going anyway.", "A smile can change someone's day, including your own.", "Every moment is a chance to rewrite your story.",
-            "Success is built on the foundation of small, consistent efforts.", "Be the light that helps others find their way.", "Your thoughts shape your reality choose them wisely.", "Progress, not perfection, is the path to greatness.",
-            "The world needs your unique spark shine brightly.", "Let go of yesterday's worries and embrace today's possibilities.", "Every challenge is a teacher in disguise.", "Your heart knows the way trust it.",
-            "Happiness is found in the journey, not just the destination.", "Dare to dream big, and take one step toward it today.", "The best time to start is now don't wait for perfect.", "Your strength is greater than any obstacle you face.",
-            "Inspire others by being unapologetically yourself.", "A single act of kindness can ripple through the world.", "Today's efforts are tomorrow's victories.", "Believe in the power of your own resilience.",
-            "Every day is a fresh start to chase your dreams.", "The world is brighter when you share your light.", "Small changes today lead to big transformations tomorrow.", "Your courage inspires others to be brave.",
-            "Find joy in the ordinary moments of today.", "Your voice matters speak your truth.", "Embrace the unknown; it's where growth happens.", "Every step you take is a victory over doubt.",
-            "The beauty of life lies in its endless possibilities.", "You are stronger than you know keep going.", "Let love and kindness guide your actions today.", "The future is shaped by what you do right now.",
-            "Your dreams are worth every effort you make.", "Be the reason someone believes in goodness today.", "Every day is a chance to become a better version of you.", "Your passion is the fuel for your purpose.",
-            "Turn obstacles into stepping stones.", "The world needs your unique gifts share them.", "Today's choices create tomorrow's opportunities.", "You are capable of more than you imagine.",
-            "Let gratitude transform your perspective today.", "The journey of a thousand miles begins with one step.", "Your resilience turns dreams into reality.", "Spread positivity it's contagious.",
-            "Every challenge you face makes you stronger.", "Your heart's desires are worth pursuing.", "Today is a blank page write a story worth telling.", "Believe in yourself, and others will too.",
-            "The smallest act of courage can change everything.", "Your potential is a spark waiting to ignite.", "Embrace today with an open heart and fearless spirit.", "You are the author of your own destiny.",
-            "Every day brings a new chance to shine.", "Your kindness can change the world, one moment at a time.", "Dare to be different it's your greatest strength.", "The only way to discover your limits is to push past them.",
-            "Today's efforts plant the seeds for tomorrow's success.", "Your dreams are closer than you think keep reaching.", "Be the change you wish to see in the world.", "Every sunrise is an invitation to start anew.",
-            "Your courage lights the way for others.", "Find beauty in the journey, not just the destination.", "You are enough, just as you are.", "Let your actions speak louder than your fears.",
-            "Today is a new opportunity to chase your dreams.", "The world is better because you're in it.", "Your strength lies in your ability to keep going.", "Every moment is an opportunity to create something amazing.",
-            "Believe in the magic of new beginnings.", "Your dreams are the compass for your journey.", "Kindness is the key to unlocking hearts.", "Today's challenges are tomorrow's triumphs.",
-            "You have the power to shape your future.", "Embrace the present it's where life happens.", "Your courage inspires those around you.", "Every step forward is a step toward greatness.",
-            "The world needs your unique perspective.", "Today is a fresh start make it count.", "Your heart knows the path follow it.", "Small acts of kindness create big waves of change.",
-            "You are capable of achieving extraordinary things.", "Let your dreams guide your actions today.", "The future belongs to those who believe in themselves.", "Every day is a chance to rewrite your story.",
-            "Your resilience is your greatest asset.", "Be a beacon of hope in someone's storm.", "Today's efforts are the foundation of tomorrow's success.", "Your potential is a flame keep it burning.",
-            "Embrace each day with courage and curiosity.", "You are the architect of your own happiness.", "The world is waiting for your unique contribution.", "Every sunrise is a reminder of your endless potential.",
-            "Your kindness can light up even the darkest days.", "Today is a canvas paint it with purpose.", "Believe in yourself, and the world will follow.", "Your dreams are the stars guiding your journey.",
-            "Every challenge is a chance to grow stronger.", "The smallest step today can lead to the biggest change.", "You are a force of nature unstoppable and unique.", "Let love and compassion guide your actions.",
-            "Today's possibilities are as vast as your imagination.", "Your courage creates ripples of inspiration.", "Every day is a new chapter write it boldly.", "The world needs your light don't hide it.",
-            "Your resilience turns dreams into reality.", "Embrace today's challenges as tomorrow's victories.", "You have the power to change your story.", "Kindness is the bridge that connects hearts.",
-            "Today is a gift open it with gratitude.", "Your potential knows no bounds explore it.", "The journey to success begins with a single step.", "Be the spark that ignites positive change.",
-            "Every moment is an opportunity to shine.", "Your dreams are worth every effort you make.", "Today's courage shapes tomorrow's triumphs.", "You are stronger than any challenge you face.",
-            "Let your heart lead the way today.", "The world is brighter because of your presence.", "Every day is a chance to start anew.", "Your passion fuels your purpose.",
-            "Believe in the power of your own journey.", "Today's small steps lead to big dreams.", "You are capable of creating extraordinary moments.", "Kindness is the language of the heart.",
-            "Embrace the unknown it's where magic happens.", "Your resilience is your greatest strength.", "Today is a fresh start seize it.", "The world needs your unique voice.",
-            "Every challenge is a stepping stone to success.", "Your dreams are the blueprint for your future.", "Be the light that inspires others.", "Today's efforts are tomorrow's rewards.",
-            "You have the power to shape your destiny.", "Let gratitude guide your perspective today.", "Every sunrise is a chance to begin again.", "Your courage makes the impossible possible.",
-            "The world is waiting for your brilliance.", "Today is a canvas for your dreams.", "Your kindness can change someone's world.", "Every step forward is a victory.",
-            "Believe in yourself, and anything is possible.", "Your dreams are the stars in your sky.", "Today's challenges are tomorrow's strengths.", "You are a masterpiece in progress.",
-            "Let your actions reflect your highest aspirations.", "The world needs your unique energy.", "Every day is a new opportunity to grow.", "Your resilience turns obstacles into opportunities.",
-            "Today is a gift embrace it fully.", "Your potential is a spark waiting to shine.", "Kindness is the key to a brighter world.", "Every challenge is a chance to learn.",
-            "Your dreams are worth chasing today.", "Be the change you want to see in the world.", "Today's efforts build tomorrow's success.", "You are stronger than you know.",
-            "Let your heart guide your journey.", "The world is better with your light.", "Every sunrise is a new beginning.", "Your courage inspires those around you.",
-            "Today is a chance to create something amazing.", "Your dreams are the seeds of your future.", "Be a beacon of hope and positivity.", "Every step forward is a step toward greatness.",
-            "Your kindness creates ripples of change.", "Today is a fresh start make it count.", "You have the power to shape your future.", "Let gratitude guide your heart.",
-            "Every challenge is an opportunity in disguise.", "Your resilience makes you unstoppable.", "The world needs your unique gifts.", "Today's possibilities are endless.",
-            "Your dreams are worth every effort.", "Be the light that brightens someone's day.", "Every day is a chance to shine.", "Your courage turns dreams into reality.",
-            "Today is a canvas paint it with purpose.", "You are capable of extraordinary things.", "Let kindness guide your actions today.", "The world is waiting for your brilliance.",
-            "Every sunrise is a reminder of your potential.", "Your resilience is your greatest asset.", "Today's small steps lead to big victories.", "You are the author of your own story.",
-            "Be the spark that ignites change.", "Every challenge is a chance to grow.", "Your dreams are the compass of your heart.", "Today is a gift unwrap it with joy.",
-            "Your kindness can change the world.", "Every day is a new opportunity to thrive.", "You are stronger than any obstacle.", "Let your passion light the way.",
-            "The world needs your unique voice.", "Today's efforts are tomorrow's triumphs.", "Your courage makes the impossible possible.", "Every sunrise is a chance to start fresh.",
-            "Your dreams are worth pursuing.", "Be the change you wish to see.", "Today is a canvas for your dreams.", "You have the power to create your future.",
-            "Let gratitude shape your perspective.", "Every challenge is a stepping stone.", "Your resilience turns dreams into reality.", "The world is brighter because of you.",
-            "Today is a new beginning embrace it.", "Your kindness creates a ripple effect.", "Every step forward is a victory.", "You are capable of amazing things.",
-            "Let your heart lead the way today.", "The world needs your light shine on.", "Today's possibilities are limitless.", "Your dreams are the stars guiding you.",
-            "Be the inspiration others need.", "Every day is a chance to grow stronger.", "Your courage transforms challenges into opportunities.", "Today is a gift make it count.",
-            "You are a force of positive change.", "Let kindness be your legacy.", "Every sunrise is a new opportunity.", "Your resilience is your superpower.",
-            "The world needs your unique energy.", "Today's efforts build tomorrow's dreams.", "You have the power to shape your destiny.", "Let gratitude light your path.",
-            "Every challenge is a chance to shine.", "Your dreams are worth every step.", "Be the light in someone's darkness.", "Today is a fresh start seize it.",
-            "Your courage inspires greatness.", "The world is waiting for your gifts.", "Every day is a new chapter write it well.", "Your kindness changes everything.",
-            "Today's small steps lead to big wins.", "You are stronger than you know.", "Let your passion guide your actions.", "The world needs your unique spark.",
-            "Every sunrise is a chance to begin again.", "Your resilience turns obstacles into triumphs.", "Today is a canvas for your dreams.", "You have the power to create change.",
-            "Let gratitude transform your perspective.", "Every challenge is an opportunity to grow.", "Your dreams are the blueprint for your future.", "Be the change you want to see today.",
-            "Today's efforts are tomorrow's rewards.", "You are capable of extraordinary things.", "Let kindness be your guide.", "The world is brighter with your light.",
-            "Every day is a chance to shine.", "Your courage makes the impossible possible.", "Today is a gift embrace it fully.", "Your dreams are worth chasing.",
-            "Be the spark that ignites hope.", "Every step forward is a victory.", "You have the power to shape your story.", "Let gratitude guide your heart.",
-            "Every challenge is a chance to learn.", "Your resilience is your greatest strength.", "The world needs your unique voice.", "Today's possibilities are endless.",
-            "Your dreams are the stars in your sky.", "Be the light that inspires others.", "Every day is a new opportunity to grow.", "Your courage turns dreams into reality.",
-            "Today is a canvas paint it boldly.", "You are stronger than any obstacle.", "Let kindness shape your actions.", "The world is waiting for your brilliance.",
-            "Every sunrise is a fresh start.", "Your resilience makes you unstoppable.", "Today's efforts build tomorrow's success.", "You have the power to shape your destiny.",
-            "Let gratitude light up your day.", "Every challenge is a- stepping stone.", "Your dreams are worth every effort.", "Be the change you wish to see.",
-            "Today is a gift unwrap it with joy.", "Your kindness creates ripples of hope.", "Every day is a chance to shine.", "You are capable of amazing things.",
-            "Let your heart guide your journey.", "The world needs your unique energy.", "Today's small steps lead to big wins.", "Your courage transforms challenges.",
-            "Every sunrise is a new beginning.", "Your resilience is your superpower.", "Today is a canvas for your dreams.", "You have the power to shape your destiny.",
-            "Let gratitude transform your day.", "Every challenge is an opportunity.", "Your dreams are the compass of your heart.", "Be the light in someone's storm.",
-            "Today's efforts are tomorrow's triumphs.", "You are stronger than you know.", "Let kindness be your legacy.", "The world needs your unique gifts.",
-            "Every day is a chance to grow.", "Your resilience turns obstacles into opportunities.", "Today is a fresh start seize it.", "Your courage inspires greatness.",
-            "The world is brighter because of you.", "Every sunrise is a new opportunity.", "Your dreams are worth pursuing.", "Be the spark that ignites change.",
-            "Today's possibilities are limitless.", "You have the power to create your future.", "Let gratitude guide your actions.", "Every challenge is a chance to shine.",
-            "Your resilience makes you unstoppable.", "The world needs your unique voice.", "Today is a canvas paint it with purpose.", "Your kindness changes everything.",
-            "Every step forward is a victory.", "You are capable of extraordinary things.", "Let your passion light the way.", "The world is waiting for your brilliance.",
-            "Every day is a new beginning.", "Your courage turns dreams into reality.", "Today's efforts build tomorrow's success.", "You have the power to shape your story.",
-            "Let gratitude transform your perspective.", "Every challenge is a stepping stone.", "Your dreams are the stars guiding you.", "Be the light that inspires others.",
-            "Today is a gift make it count.", "Your resilience is your greatest asset.", "The world needs your unique energy.", "Every sunrise is a chance to start fresh.",
-            "Your kindness creates ripples of hope.", "Today's small steps lead to big wins.", "You are stronger than any obstacle.", "Let your heart guide your actions.",
-            "The world is brighter with your light.", "Every day is a new opportunity to thrive.", "Your courage makes the impossible possible.", "Today is a canvas for your dreams.",
-            "You have the power to create change.", "Let gratitude light up your day.", "Every challenge is an opportunity to grow.", "Your dreams are worth every effort.",
-            "Be the change you want to see today.", "Today's efforts are tomorrow's rewards.", "You are capable of amazing things.", "Let kindness be your guide.",
-            "The world needs your unique spark.", "Every sunrise is a fresh start.", "Your resilience turns obstacles into triumphs.", "Today is a gift embrace it fully.",
-            "Your dreams are the blueprint for your future.", "Be the light in someone's darkness.", "Every step forward is a step toward greatness.", "Your kindness changes the world.",
-            "Today's possibilities are endless.", "You have the power to shape your destiny.", "Let gratitude transform your heart.", "Every day is a chance to become your best self."
+            "Start each day with a grateful heart, and watch the world open up to you.",
+            "Every sunrise is a canvas of new possibilities paint it boldly.",
+            "The smallest step forward today leads to the greatest leaps tomorrow.",
+            "Embrace challenges as opportunities to grow stronger.",
+            "Your potential is limitless when you believe in yourself.",
+            "Kindness is a spark that lights up the world around you.",
+            "Courage doesn't mean you're not afraid it means you keep going anyway.",
+            "Success is built on the foundation of small, consistent efforts.",
+            "Be the light that helps others find their way.",
+            "Your thoughts shape your reality choose them wisely.",
+            "Progress, not perfection, is the path to greatness.",
+            "The world needs your unique spark shine brightly.",
+            "Let go of yesterday's worries and embrace today's possibilities.",
+            "Every challenge is a teacher in disguise.",
+            "Happiness is found in the journey, not just the destination.",
+            "Dare to dream big, and take one step toward it today.",
+            "The best time to start is now don't wait for perfect.",
+            "Your strength is greater than any obstacle you face.",
+            "A single act of kindness can ripple through the world.",
+            "Believe in the power of your own resilience.",
+            "The future is shaped by what you do right now."
         ];
-
 
         // --- Functions ---
 
         /**
-         * Hides all result panes (loader, error, data, quote)
+         * Hides all dynamic content panes before a new search.
          */
         function hideAllPanes() {
             loader.classList.add('hidden');
@@ -256,18 +183,17 @@
         }
 
         /**
-         * Fetches data from the global sunrise-sunset.org API.
-         * @param {string} lat - Latitude
-         * @param {string} lng - Longitude
-         * @param {string} cityName - The display name of the city
+         * Fetches sunrise and sunset times from the API.
+         * @param {string} lat - Latitude.
+         * @param {string} lng - Longitude.
+         * @param {string} cityName - The display name of the location.
          */
-        async function getSunriseSunsetFromFallback(lat, lng, cityName) {
-            console.log("NOAA failed, using fallback API.");
+        async function fetchSunriseSunsetData(lat, lng, cityName) {
             const apiUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`;
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
-                    throw new Error(`Fallback API request failed with status: ${response.status}`);
+                    throw new Error(`API request failed with status: ${response.status}`);
                 }
                 const data = await response.json();
 
@@ -276,110 +202,30 @@
                     const sunsetUTC = new Date(data.results.sunset);
 
                     const timeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                    
+                    // Update UI with results
                     sunriseTimeEl.textContent = sunriseUTC.toLocaleTimeString([], timeFormatOptions);
                     sunsetTimeEl.textContent = sunsetUTC.toLocaleTimeString([], timeFormatOptions);
-                    
                     locationName.textContent = cityName;
+                    
                     hideAllPanes();
                     resultsContent.classList.remove('hidden');
                     displayRandomQuote();
                 } else {
-                    throw new Error(`Fallback API Error: ${data.status}`);
+                    // Handle API-specific errors (e.g., invalid coordinates)
+                    throw new Error(`API Error: ${data.status}`);
                 }
-            } catch (fallbackError) {
-                console.error("Fallback API also failed:", fallbackError);
-                displayError('Could not retrieve data from any source. Please check coordinates and try again.');
-            }
-        }
-
-
-        /**
-         * Fetches sunrise/sunset data, trying NOAA first and then a fallback.
-         * @param {string} cityName - The display name of the city
-         */
-        async function getSunriseSunset(cityName) {
-            const lat = parseFloat(latitudeInput.value).toFixed(4);
-            const lng = parseFloat(longitudeInput.value).toFixed(4);
-
-            if (isNaN(lat) || isNaN(lng)) {
-                console.error("Invalid coordinates provided to getSunriseSunset:", lat, lng);
-                return;
-            }
-
-            hideAllPanes();
-            loader.classList.remove('hidden');
-            searchCityButton.disabled = true;
-
-            const headers = new Headers({ 'User-Agent': '(Sunrise Sunset App, your-email@example.com)' });
-
-            try {
-                // Try NOAA First
-                const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
-                const pointsResponse = await fetch(pointsUrl, { headers });
-                if (!pointsResponse.ok) {
-                    throw new Error("NOAA data not available, attempting fallback.");
-                }
-                
-                const pointsData = await pointsResponse.json();
-                const gridUrl = pointsData.properties?.forecastGridData;
-                const forecastUrl = pointsData.properties?.forecast;
-
-                if (!gridUrl && !forecastUrl) throw new Error("Could not determine NOAA forecast endpoints.");
-                
-                let sunriseIso, sunsetIso;
-
-                if (gridUrl) {
-                    const gridResponse = await fetch(gridUrl, { headers });
-                    if (gridResponse.ok) {
-                        const gridData = await gridResponse.json();
-                        const sunriseValues = gridData.properties?.sunriseTime?.values;
-                        const sunsetValues = gridData.properties?.sunsetTime?.values;
-                        if (sunriseValues?.length > 0 && sunsetValues?.length > 0) {
-                            sunriseIso = sunriseValues[0].value;
-                            sunsetIso = sunsetValues[0].value;
-                        }
-                    }
-                }
-
-                if ((!sunriseIso || !sunsetIso) && forecastUrl) {
-                    const forecastResponse = await fetch(forecastUrl, { headers });
-                    if (forecastResponse.ok) {
-                        const forecastData = await forecastResponse.json();
-                        const daytimePeriod = forecastData.properties?.periods?.find(p => p.isDaytime);
-                        if (daytimePeriod) {
-                            sunriseIso = daytimePeriod.startTime;
-                            sunsetIso = daytimePeriod.endTime;
-                        }
-                    }
-                }
-
-                if (!sunriseIso || !sunsetIso) throw new Error("Could not find sunrise/sunset in NOAA data, attempting fallback.");
-                
-                const sunriseUTC = new Date(sunriseIso);
-                const sunsetUTC = new Date(sunsetIso);
-
-                const timeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                sunriseTimeEl.textContent = sunriseUTC.toLocaleTimeString([], timeFormatOptions);
-                sunsetTimeEl.textContent = sunsetUTC.toLocaleTimeString([], timeFormatOptions);
-                
-                locationName.textContent = cityName;
-                hideAllPanes();
-                resultsContent.classList.remove('hidden');
-                displayRandomQuote();
-
             } catch (error) {
-                console.error("NOAA fetch failed:", error.message);
-                await getSunriseSunsetFromFallback(lat, lng, cityName);
-            } finally {
-                searchCityButton.disabled = false;
+                console.error("Sunrise/Sunset API failed:", error);
+                displayError('Could not retrieve solar times. Please try again.');
             }
         }
 
         /**
-         * Geocodes a city name using OpenStreetMap and then fetches data.
+         * Geocodes a city name using OpenStreetMap and then fetches solar data.
+         * @param {string} city - The city name to search for.
          */
-        async function searchByCity() {
-            const city = citySearchInput.value;
+        async function geocodeAndFetch(city) {
             if (!city) {
                 displayError('Please enter a city name to search.');
                 return;
@@ -392,38 +238,49 @@
             const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
             try {
                 const geocodeResponse = await fetch(geocodeUrl);
-                if (!geocodeResponse.ok) throw new Error(`Geocoding failed: ${geocodeResponse.status}`);
+                if (!geocodeResponse.ok) {
+                    throw new Error(`Geocoding service failed: ${geocodeResponse.status}`);
+                }
                 const geocodeData = await geocodeResponse.json();
+                
                 if (geocodeData && geocodeData.length > 0) {
                     const location = geocodeData[0];
-                    latitudeInput.value = parseFloat(location.lat).toFixed(4);
-                    longitudeInput.value = parseFloat(location.lon).toFixed(4);
+                    const lat = parseFloat(location.lat).toFixed(4);
+                    const lon = parseFloat(location.lon).toFixed(4);
                     
-                    // Pass the formatted display name to the next function
-                    await getSunriseSunset(location.display_name); 
+                    // Update the read-only coordinate fields
+                    latitudeInput.value = lat;
+                    longitudeInput.value = lon;
                     
-                    citySearchInput.value = ''; // Clear input after search
+                    // Fetch solar data using the newly found coordinates
+                    await fetchSunriseSunsetData(lat, lon, location.display_name); 
+                    
+                    citySearchInput.value = ''; // Clear input after successful search
                 } else {
                      throw new Error('City not found. Please try a more specific search.');
                 }
             } catch(error) {
                  console.error("Geocoding or data fetch failed:", error);
                  displayError(error.message);
-                 searchCityButton.disabled = false;
+            } finally {
+                // Always re-enable the button
+                searchCityButton.disabled = false;
             }
         }
 
         // --- Event Listeners ---
-        searchCityButton.addEventListener('click', searchByCity);
+        searchCityButton.addEventListener('click', () => geocodeAndFetch(citySearchInput.value));
         
         citySearchInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') searchByCity();
+            if (event.key === 'Enter') {
+                geocodeAndFetch(citySearchInput.value);
+            }
         });
 
         // --- Initial Load ---
-        // Automatically fetch data for the default coordinates when the page loads.
+        // Automatically fetch data for the default location when the page loads.
         window.onload = () => {
-             getSunriseSunset("Maui, HI, USA");
+             geocodeAndFetch("Maui, HI");
         };
 
     </script>

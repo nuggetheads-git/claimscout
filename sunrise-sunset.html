@@ -28,26 +28,11 @@
             
             <div class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Sunrise & Sunset Finder</h1>
-                <p class="text-slate-400 mt-2">Find solar times by city, coordinates, or your location.</p>
+                <p class="text-slate-400 mt-2">Find solar times by city or coordinates.</p>
             </div>
 
             <!-- Input Form -->
             <div class="space-y-4 mb-6">
-                 <!-- Geolocation Button -->
-                 <div>
-                    <button id="useLocationButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <span>Use My Current Location</span>
-                    </button>
-                </div>
-
-                 <!-- OR Separator -->
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-700"></div>
-                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase">Or</span>
-                    <div class="flex-grow border-t border-slate-700"></div>
-                </div>
-
                 <!-- City Search -->
                 <div>
                     <label for="citySearch" class="block text-sm font-medium text-slate-300 mb-1">Search by City</label>
@@ -59,6 +44,13 @@
                     </div>
                 </div>
                 
+                <!-- OR Separator -->
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase">Or</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+
                 <!-- Manual Coordinates -->
                 <div>
                     <label for="latitude" class="block text-sm font-medium text-slate-300 mb-1">Latitude</label>
@@ -117,7 +109,6 @@
 
     <script>
         // --- DOM Element References ---
-        const useLocationButton = document.getElementById('useLocationButton');
         const citySearchInput = document.getElementById('citySearch');
         const searchCityButton = document.getElementById('searchCityButton');
         const fetchButton = document.getElementById('fetchButton');
@@ -205,7 +196,7 @@
             "Your dreams are the stars in your sky.", "Be the light that inspires others.", "Every day is a new opportunity to grow.", "Your courage turns dreams into reality.",
             "Today is a canvas paint it boldly.", "You are stronger than any obstacle.", "Let kindness shape your actions.", "The world is waiting for your brilliance.",
             "Every sunrise is a fresh start.", "Your resilience makes you unstoppable.", "Today's efforts build tomorrow's success.", "You have the power to shape your destiny.",
-            "Let gratitude light up your day.", "Every challenge is a stepping stone.", "Your dreams are worth every effort.", "Be the change you wish to see.",
+            "Let gratitude light up your day.", "Every challenge is a- stepping stone.", "Your dreams are worth every effort.", "Be the change you wish to see.",
             "Today is a gift unwrap it with joy.", "Your kindness creates ripples of hope.", "Every day is a chance to shine.", "You are capable of amazing things.",
             "Let your heart guide your journey.", "The world needs your unique energy.", "Today's small steps lead to big wins.", "Your courage transforms challenges.",
             "Every sunrise is a new beginning.", "Your resilience is your superpower.", "Today is a canvas for your dreams.", "You have the power to shape your destiny.",
@@ -276,7 +267,6 @@
             loader.classList.remove('hidden');
             fetchButton.disabled = true;
             searchCityButton.disabled = true;
-            useLocationButton.disabled = true;
 
             const headers = new Headers({ 'User-Agent': '(Sunrise Sunset App, your-email@example.com)' });
 
@@ -345,7 +335,6 @@
             } finally {
                 fetchButton.disabled = false;
                 searchCityButton.disabled = false;
-                useLocationButton.disabled = false;
             }
         }
 
@@ -359,9 +348,11 @@
                 return;
             }
             
-            // We need to geocode first to get the lat/lon
             hideAllPanes();
             loader.classList.remove('hidden');
+            fetchButton.disabled = true;
+            searchCityButton.disabled = true;
+
             const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
             try {
                 const geocodeResponse = await fetch(geocodeUrl);
@@ -371,49 +362,22 @@
                     const location = geocodeData[0];
                     latitudeInput.value = parseFloat(location.lat).toFixed(4);
                     longitudeInput.value = parseFloat(location.lon).toFixed(4);
-                    citySearchInput.value = ''; // Clear input after search
+                    citySearchInput.value = ''; 
                     await getSunriseSunsetFromNOAA(); 
                 } else {
                      throw new Error('City not found. Please try a more specific search.');
                 }
             } catch(error) {
-                 console.error("Geocoding failed:", error);
+                 console.error("Geocoding or data fetch failed:", error);
                  displayError(error.message);
                  fetchButton.disabled = false;
                  searchCityButton.disabled = false;
-                 useLocationButton.disabled = false;
             }
-        }
-
-        /**
-         * Gets user's current location and fetches data.
-         */
-        function getUserLocation() {
-            if (!navigator.geolocation) {
-                displayError("Geolocation is not supported by your browser.");
-                return;
-            }
-
-            function success(position) {
-                latitudeInput.value = position.coords.latitude.toFixed(4);
-                longitudeInput.value = position.coords.longitude.toFixed(4);
-                citySearchInput.value = "Your Location";
-                getSunriseSunsetFromNOAA();
-            }
-
-            function error() {
-                displayError("Unable to retrieve your location. Please use another method.");
-            }
-            
-            hideAllPanes();
-            loader.classList.remove('hidden');
-            navigator.geolocation.getCurrentPosition(success, error);
         }
 
         // --- Event Listeners ---
         fetchButton.addEventListener('click', getSunriseSunsetFromNOAA);
         searchCityButton.addEventListener('click', searchByCity);
-        useLocationButton.addEventListener('click', getUserLocation);
         
         citySearchInput.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') searchByCity();

@@ -37,7 +37,7 @@
                 <div>
                     <label for="citySearch" class="block text-sm font-medium text-slate-300 mb-1">Search by City</label>
                     <div class="flex space-x-2">
-                        <input type="text" id="citySearch" placeholder="e.g., Peoria, AZ" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition duration-200">
+                        <input type="text" id="citySearch" placeholder="e.g., Peoria, AZ or Toronto, ON" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition duration-200">
                         <button id="searchCityButton" class="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
                             Search
                         </button>
@@ -101,7 +101,7 @@
             </div>
             
             <div class="text-center mt-6">
-                 <p class="text-xs text-slate-500">Powered by the <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" class="underline hover:text-slate-400">NOAA API</a> & <a href="https://openstreetmap.org" target="_blank" class="underline hover:text-slate-400">OpenStreetMap</a>. Times are shown in your local timezone.</p>
+                 <p class="text-xs text-slate-500">Powered by the <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" class="underline hover:text-slate-400">NOAA API</a>, <a href="https://sunrise-sunset.org/api" target="_blank" class="underline hover:text-slate-400">sunrise-sunset.org</a> & <a href="https://openstreetmap.org" target="_blank" class="underline hover:text-slate-400">OpenStreetMap</a>.</p>
             </div>
 
         </div>
@@ -252,9 +252,46 @@
         }
 
         /**
-         * Fetches sunrise/sunset data from the NOAA API based on lat/lon.
+         * Fetches data from the global sunrise-sunset.org API.
+         * This is used as a fallback if NOAA fails.
+         * @param {string} lat - Latitude
+         * @param {string} lng - Longitude
          */
-        async function getSunriseSunsetFromNOAA() {
+        async function getSunriseSunsetFromFallback(lat, lng) {
+            console.log("NOAA failed, using fallback API.");
+            const apiUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`Fallback API request failed with status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.status === 'OK') {
+                    const sunriseUTC = new Date(data.results.sunrise);
+                    const sunsetUTC = new Date(data.results.sunset);
+
+                    const timeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                    sunriseTimeEl.textContent = sunriseUTC.toLocaleTimeString([], timeFormatOptions);
+                    sunsetTimeEl.textContent = sunsetUTC.toLocaleTimeString([], timeFormatOptions);
+                    
+                    hideAllPanes();
+                    dataDiv.classList.remove('hidden');
+                    displayRandomQuote();
+                } else {
+                    throw new Error(`Fallback API Error: ${data.status}`);
+                }
+            } catch (fallbackError) {
+                console.error("Fallback API also failed:", fallbackError);
+                displayError('Could not retrieve data from any source. Please check coordinates and try again.');
+            }
+        }
+
+
+        /**
+         * Fetches sunrise/sunset data, trying NOAA first and then a fallback.
+         */
+        async function getSunriseSunset() {
             const lat = parseFloat(latitudeInput.value).toFixed(4);
             const lng = parseFloat(longitudeInput.value).toFixed(4);
 
@@ -271,40 +308,36 @@
             const headers = new Headers({ 'User-Agent': '(Sunrise Sunset App, your-email@example.com)' });
 
             try {
+                // Try NOAA First
                 const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
                 const pointsResponse = await fetch(pointsUrl, { headers });
                 if (!pointsResponse.ok) {
-                    const errorDetail = (await pointsResponse.json()).detail;
-                    throw new Error(errorDetail || `Points lookup failed: ${pointsResponse.status}`);
+                    // This is the common failure point for non-US locations
+                    throw new Error("NOAA data not available, attempting fallback.");
                 }
                 
                 const pointsData = await pointsResponse.json();
                 const gridUrl = pointsData.properties?.forecastGridData;
                 const forecastUrl = pointsData.properties?.forecast;
 
-                if (!gridUrl && !forecastUrl) throw new Error("Could not determine forecast endpoints for these coordinates.");
+                if (!gridUrl && !forecastUrl) throw new Error("Could not determine NOAA forecast endpoints.");
                 
                 let sunriseIso, sunsetIso;
 
                 if (gridUrl) {
-                    try {
-                        const gridResponse = await fetch(gridUrl, { headers });
-                        if (gridResponse.ok) {
-                            const gridData = await gridResponse.json();
-                            const sunriseValues = gridData.properties?.sunriseTime?.values;
-                            const sunsetValues = gridData.properties?.sunsetTime?.values;
-                            if (sunriseValues?.length > 0 && sunsetValues?.length > 0) {
-                                sunriseIso = sunriseValues[0].value;
-                                sunsetIso = sunsetValues[0].value;
-                            }
+                    const gridResponse = await fetch(gridUrl, { headers });
+                    if (gridResponse.ok) {
+                        const gridData = await gridResponse.json();
+                        const sunriseValues = gridData.properties?.sunriseTime?.values;
+                        const sunsetValues = gridData.properties?.sunsetTime?.values;
+                        if (sunriseValues?.length > 0 && sunsetValues?.length > 0) {
+                            sunriseIso = sunriseValues[0].value;
+                            sunsetIso = sunsetValues[0].value;
                         }
-                    } catch (gridError) {
-                        console.warn("Grid data method failed, attempting fallback.", gridError);
                     }
                 }
 
                 if ((!sunriseIso || !sunsetIso) && forecastUrl) {
-                    console.log("Primary method failed or data was unavailable. Trying fallback forecast endpoint.");
                     const forecastResponse = await fetch(forecastUrl, { headers });
                     if (forecastResponse.ok) {
                         const forecastData = await forecastResponse.json();
@@ -316,7 +349,7 @@
                     }
                 }
 
-                if (!sunriseIso || !sunsetIso) throw new Error("Sunrise/sunset data not available in the forecast for this location.");
+                if (!sunriseIso || !sunsetIso) throw new Error("Could not find sunrise/sunset in NOAA data, attempting fallback.");
                 
                 const sunriseUTC = new Date(sunriseIso);
                 const sunsetUTC = new Date(sunsetIso);
@@ -327,11 +360,12 @@
                 
                 hideAllPanes();
                 dataDiv.classList.remove('hidden');
-                displayRandomQuote(); // Display a quote on successful fetch
+                displayRandomQuote();
 
             } catch (error) {
-                console.error("Failed to fetch NOAA data:", error);
-                displayError(error.message || 'An unknown error occurred while fetching data from NOAA.');
+                console.error("NOAA fetch failed:", error.message);
+                // If NOAA fails for any reason, use the fallback
+                await getSunriseSunsetFromFallback(lat, lng);
             } finally {
                 fetchButton.disabled = false;
                 searchCityButton.disabled = false;
@@ -339,7 +373,7 @@
         }
 
         /**
-         * Geocodes a city name using OpenStreetMap and then fetches NOAA data.
+         * Geocodes a city name using OpenStreetMap and then fetches data.
          */
         async function searchByCity() {
             const city = citySearchInput.value;
@@ -363,7 +397,7 @@
                     latitudeInput.value = parseFloat(location.lat).toFixed(4);
                     longitudeInput.value = parseFloat(location.lon).toFixed(4);
                     citySearchInput.value = ''; 
-                    await getSunriseSunsetFromNOAA(); 
+                    await getSunriseSunset(); 
                 } else {
                      throw new Error('City not found. Please try a more specific search.');
                 }
@@ -376,23 +410,23 @@
         }
 
         // --- Event Listeners ---
-        fetchButton.addEventListener('click', getSunriseSunsetFromNOAA);
+        fetchButton.addEventListener('click', getSunriseSunset);
         searchCityButton.addEventListener('click', searchByCity);
         
         citySearchInput.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') searchByCity();
         });
         latitudeInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') getSunriseSunsetFromNOAA();
+            if (event.key === 'Enter') getSunriseSunset();
         });
         longitudeInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') getSunriseSunsetFromNOAA();
+            if (event.key === 'Enter') getSunriseSunset();
         });
 
 
         // --- Initial Load ---
         // Automatically fetch data for the default coordinates when the page loads.
-        window.onload = getSunriseSunsetFromNOAA;
+        window.onload = getSunriseSunset;
 
     </script>
 </body>

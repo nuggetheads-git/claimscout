@@ -81,7 +81,7 @@
         // --- Inline SVG Icon Components ---
         const MiningPickIcon = ({ size = 24, className = '', ...props }) => (
           <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 256 256" fill="currentColor" className={className} {...props}>
-            <path d="M216.7,93.9,141.9,28.7a8.2,8.2,0,0,0-11.4,0L96,63.2,63.2,32.7a8.2,8.2,0,0,0-11.4,0L28.7,55.8a8.2,8.2,0,0,0,0,11.4L64,102.4,28.7,137.7a8.2,8.2,0,0,0,0,11.4l23.1,23.1a8.2,8.2,0,0,0,11.4,0L98.5,138l34.3,34.3a8.2,8.2,0,0,0,11.4,0l34.3-34.3,34.4,34.3a8.2,8.2,0,0,0,11.4,0l23.1-23.1a8.2,8.2,0,0,0,0-11.4l-35.3-35.4,35.2-35.2A8.2,8.2,0,0,0,216.7,93.9Z"/>
+            <path d="M216.7,93.9,141.9,28.7a8.2,8.2,0,0,0-11.4,0L96,63.2,63.2,32.7a8.2,8.2,0,0,0-11.4,0L28.7,55.8a8.2,8.2,0,0,0,0,11.4L64,102.4,28.7,137.7a8.2,8.2,0,0,0,0,11.4l23.1,23.1a8.2,8.2,0,0,0,11.4,0L98.5,138l34.3,34.3a8.2,8.2,0,0,0,11.4,0l34.3-34.3,34.4,34.3a8.2,8.2,0,0,0,11.4,0l23.1-23.1a8.2,8.2,0,0,0,0,11.4l-35.3-35.4,35.2-35.2A8.2,8.2,0,0,0,216.7,93.9Z"/>
           </svg>
         );
 
@@ -177,20 +177,41 @@
             };
           }, [baseValue, distanceAdjustment, locationQuality, dateFiled, experience, assayMultiplier]);
 
+          const locationDescription = useMemo(() => {
+              if (locationQuality < 40) return "How will you get to the claim?";
+              if (locationQuality < 75) return "Let's consider fuel and maintenance costs.";
+              return "Best possible road condition.";
+          }, [locationQuality]);
+
+          const distanceDescription = useMemo(() => {
+              if (distance < 40) return "Best reasonable outcome for ongoing drive time, fuel, and maintenance.";
+              if (distance > 60) return "Least favorable for ongoing drive time, fuel, and maintenance costs.";
+              return "Consider ongoing drive time, fuel, and maintenance costs.";
+          }, [distance]);
+
+          const dateFiledDescription = useMemo(() => {
+              if (dateFiled < 40) return "Ask questions. Do you wonder why the claim is being sold so quickly? Is it a file and flip?";
+              if (dateFiled <= 60) return "Ask questions. The claim has been held and possibly worked to some extent, but it's not a quick file and flip.";
+              return "Ask questions. Not a quick file and flip, but it may have been considerably worked.";
+          }, [dateFiled]);
+
+          const experienceDescription = useMemo(() => {
+              if (experience < 40) return "Ask questions and seek guidance. Do you understand the risk vs reward factor with no experience?";
+              if (experience <= 60) return "Your experience may give you an improved risk to reward perspective on gold recovery and the operations involved.";
+              return "By now you should have considerable experience with gold recovery and processing.";
+          }, [experience]);
+
           // --- Chart.js Integration ---
           useEffect(() => {
             if (!chartRef.current) return;
             const ctx = chartRef.current.getContext('2d');
             
-            // This function creates the floating bar data structure.
-            // For negative values, it returns [value, 0]. For positive, [0, value].
             const createFloatingBar = (value) => (value >= 0 ? [0, value] : [value, 0]);
 
             const chartData = {
                 labels: ['Base Value', 'Location', 'Distance', 'Date Filed', 'Experience', 'Total Valuation'],
                 datasets: [{
                     label: 'Valuation Factors ($)',
-                    // Map the values to the floating bar format
                     data: [
                         createFloatingBar(baseValue),
                         createFloatingBar(locationAdjustment),
@@ -228,7 +249,6 @@
                         ticks: { color: '#4B5563' }
                     },
                     x: { 
-                        // Note: beginAtZero is removed to allow the axis to show negative values
                         title: { display: true, text: 'Amount ($)', color: '#4B5563' },
                         ticks: { color: '#4B5563' }
                     }
@@ -305,10 +325,38 @@
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <h2 className="text-xl font-semibold text-gray-800 mb-6">Valuation Factors</h2>
                         <div className="space-y-8">
-                          <CustomSlider label="Location Quality" value={locationQuality} onChange={setLocationQuality} labels={['Landlocked', '4x4 Access', 'Paved/Dirt Rd']} displayValue={`${locationQuality}%`} />
-                          <CustomSlider label="Distance from Your Location" value={distance} onChange={setDistance} labels={['< 50 mi', '51-100 mi', '> 100 mi']} displayValue={getSliderLabel(distance, ['< 50 miles', '51-100 miles', '> 100 miles'])} />
-                          <CustomSlider label="Date Claim Was Filed" value={dateFiled} onChange={setDateFiled} labels={['< 6 mos', '7-18 mos', '19+ mos']} displayValue={getSliderLabel(dateFiled, ['< 6 months', '7-18 months', '19+ months'])} />
-                          <CustomSlider label="Buyer's Experience" value={experience} onChange={setExperience} labels={['None', '1-5 yrs', '5+ yrs']} displayValue={getSliderLabel(experience, ['None', '1-5 years', '5+ years'])} />
+                          <CustomSlider 
+                            label="Location Quality" 
+                            value={locationQuality} 
+                            onChange={setLocationQuality} 
+                            labels={['Landlocked', '4x4 Access', 'Paved/Dirt Rd']} 
+                            displayValue={`${locationQuality}%`}
+                            descriptionMessage={locationDescription}
+                          />
+                          <CustomSlider 
+                            label="Distance from Your Location" 
+                            value={distance} 
+                            onChange={setDistance} 
+                            labels={['< 50 mi', '51-100 mi', '> 100 mi']} 
+                            displayValue={getSliderLabel(distance, ['< 50 miles', '51-100 miles', '> 100 miles'])}
+                            descriptionMessage={distanceDescription}
+                          />
+                          <CustomSlider 
+                            label="Date Claim Was Filed" 
+                            value={dateFiled} 
+                            onChange={setDateFiled} 
+                            labels={['< 6 mos', '7-18 mos', '19+ mos']} 
+                            displayValue={getSliderLabel(dateFiled, ['< 6 months', '7-18 months', '19+ months'])}
+                            descriptionMessage={dateFiledDescription}
+                          />
+                          <CustomSlider 
+                            label="Buyer's Experience" 
+                            value={experience} 
+                            onChange={setExperience} 
+                            labels={['None', '1-5 yrs', '5+ yrs']} 
+                            displayValue={getSliderLabel(experience, ['None', '1-5 years', '5+ years'])}
+                            descriptionMessage={experienceDescription}
+                          />
                         </div>
                       </div>
                     </div>
@@ -338,7 +386,7 @@
           );
         }
 
-        function CustomSlider({ label, value, onChange, labels, displayValue }) {
+        function CustomSlider({ label, value, onChange, labels, displayValue, descriptionMessage = null }) {
           const handleChange = useCallback((e) => {
             const val = parseInt(e.target.value, 10);
             if (!isNaN(val)) onChange(val);
@@ -368,6 +416,9 @@
                 <span>{labels[1]}</span>
                 <span>{labels[2]}</span>
               </div>
+              {descriptionMessage && (
+                <p className="text-xs text-gray-500 mt-2 text-center italic">{descriptionMessage}</p>
+              )}
             </div>
           );
         }

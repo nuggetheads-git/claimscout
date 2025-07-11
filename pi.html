@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse Induction Metal Detector Animation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pulse Induction Metal Detector Animation</h1>
+    <p>This animation shows how a pulse induction metal detector sends pulses into the ground to detect a gold nugget.</p>
+    <canvas id="detectorCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('detectorCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let pulseY = 50;
+        let pulseDirection = 1;
+        let detected = false;
+        let signalStrength = 0;
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, 200, canvas.width, 200);
+
+            // Draw metal detector coil
+            ctx.fillStyle = '#333';
+            ctx.fillRect(250, 50, 100, 20);
+
+            // Draw gold nugget
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(300, 300, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw pulse
+            ctx.strokeStyle = '#00F';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(300, 70);
+            ctx.lineTo(300, pulseY);
+            ctx.stroke();
+
+            // Draw reflected signal if detected
+            if (detected) {
+                ctx.strokeStyle = '#F00';
+                ctx.beginPath();
+                ctx.moveTo(300, pulseY);
+                ctx.lineTo(300, 70);
+                ctx.stroke();
+                ctx.fillStyle = '#F00';
+                ctx.fillText('Gold Detected!', 260, 30);
+            }
+        }
+
+        function animate() {
+            pulseY += pulseDirection * 5;
+            if (pulseY >= 300) {
+                detected = true;
+                pulseDirection = -1;
+                signalStrength = 0.5;
+            }
+            if (pulseY <= 70 && detected) {
+                pulseDirection = 1;
+                detected = false;
+            }
+            drawScene();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

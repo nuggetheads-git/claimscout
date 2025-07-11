@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Refined VLF Metal Detector Animation</title>
+    <title>VLF Metal Detector Animation</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -26,8 +26,8 @@
     </style>
 </head>
 <body>
-    <h1>Refined VLF Metal Detector Animation</h1>
-    <p>This animation shows how a VLF metal detector detects a gold nugget, with the coil sweeping just above the ground as used in practice.</p>
+    <h1>VLF Metal Detector Animation</h1>
+    <p>This animation demonstrates a VLF metal detector with the coil flat on the ground, detecting a gold nugget buried beneath.</p>
     <div class="controls">
         <button onclick="toggleAnimation()">Pause/Resume</button>
         <button onclick="resetAnimation()">Reset</button>
@@ -37,56 +37,50 @@
         const canvas = document.getElementById('detectorCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Animation variables
         let wavePhase = 0;
         let coilAngle = 0;
         let coilX = 300;
-        const coilY = 240; // Coil center, bottom at y=290 (240 + 50)
+        const coilY = 295; // Center of the coil rectangle, bottom at y=300
         const nuggetX = 400;
-        const nuggetY = 350; // Within ground (y=300 to 400)
+        const nuggetY = 350; // Beneath the ground
         let detected = false;
         let isPaused = false;
 
-        function drawStaticElements() {
-            // Draw ground
-            ctx.fillStyle = '#8B4513';
+        function drawGround() {
+            ctx.fillStyle = '#8B4513'; // Brown ground
             ctx.fillRect(0, 300, canvas.width, 100);
+        }
 
-            // Draw transmitter coil (red)
-            ctx.strokeStyle = '#F00';
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(coilX, coilY, 50, 0, Math.PI * 2);
-            ctx.stroke();
+        function drawCoil() {
+            ctx.fillStyle = '#333'; // Gray coil
+            ctx.fillRect(coilX - 50, 290, 100, 10); // Flat on ground, bottom at y=300
+        }
 
-            // Draw receiver coil (blue, inside transmitter)
-            ctx.strokeStyle = '#00F';
-            ctx.beginPath();
-            ctx.arc(coilX, coilY, 30, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Draw gold nugget
-            ctx.fillStyle = '#FFD700';
+        function drawNugget() {
+            ctx.fillStyle = '#FFD700'; // Gold nugget
             ctx.beginPath();
             ctx.arc(nuggetX, nuggetY, 10, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        function drawWave() {
-            ctx.strokeStyle = '#00F';
+        function drawWaves() {
+            ctx.strokeStyle = '#00F'; // Blue electromagnetic waves
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(coilX, coilY);
-            for (let y = coilY; y <= 400; y += 5) {
-                let x_offset = 10 * Math.sin(wavePhase + y / 20);
-                ctx.lineTo(coilX + x_offset, y);
+            for (let dx of [-30, 0, 30]) { // Three waves from coil
+                let waveX = coilX + dx;
+                ctx.beginPath();
+                ctx.moveTo(waveX, 300); // Start at bottom of coil
+                for (let y = 300; y <= 400; y += 5) {
+                    let x_offset = 10 * Math.sin(wavePhase + y / 20);
+                    ctx.lineTo(waveX + x_offset, y);
+                }
+                ctx.stroke();
             }
-            ctx.stroke();
         }
 
         function drawEddyCurrents() {
             if (detected) {
-                ctx.strokeStyle = '#FF0';
+                ctx.strokeStyle = '#FF0'; // Yellow eddy currents
                 ctx.lineWidth = 2;
                 for (let i = 0; i < 3; i++) {
                     ctx.beginPath();
@@ -98,18 +92,18 @@
 
         function drawSecondaryWave() {
             if (detected) {
-                ctx.strokeStyle = '#F00';
+                ctx.strokeStyle = '#F00'; // Red secondary wave
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(nuggetX, nuggetY);
-                ctx.lineTo(coilX, coilY);
+                ctx.lineTo(coilX, coilY); // Back to coil center
                 ctx.stroke();
             }
         }
 
         function drawAlert() {
             if (detected) {
-                ctx.fillStyle = '#F00';
+                ctx.fillStyle = '#F00'; // Red alert text
                 ctx.font = '20px Arial';
                 ctx.fillText('Gold Nugget Detected!', 50, 50);
             }
@@ -124,14 +118,14 @@
             coilAngle += 0.01;
             coilX = 300 + 100 * Math.sin(coilAngle);
 
-            // Draw static elements
-            drawStaticElements();
-
-            // Draw electromagnetic wave
-            drawWave();
+            // Draw elements
+            drawGround();
+            drawCoil();
+            drawNugget();
+            drawWaves();
 
             // Check for detection
-            detected = Math.abs(coilX - nuggetX) < 20;
+            detected = Math.abs(coilX - nuggetX) < 50; // Detect when nugget is under coil
 
             // Draw detection visuals
             drawEddyCurrents();
@@ -157,7 +151,9 @@
             detected = false;
             isPaused = false;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawStaticElements();
+            drawGround();
+            drawCoil();
+            drawNugget();
             animate();
         }
 

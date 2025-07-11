@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refined VLF Metal Detector Animation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .controls {
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Refined VLF Metal Detector Animation</h1>
+    <p>This animation shows how a VLF metal detector detects a gold nugget, with the coil sweeping just above the ground as used in practice.</p>
+    <div class="controls">
+        <button onclick="toggleAnimation()">Pause/Resume</button>
+        <button onclick="resetAnimation()">Reset</button>
+    </div>
+    <canvas id="detectorCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('detectorCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Animation variables
+        let wavePhase = 0;
+        let coilAngle = 0;
+        let coilX = 300;
+        const coilY = 240; // Coil center, bottom at y=290 (240 + 50)
+        const nuggetX = 400;
+        const nuggetY = 350; // Within ground (y=300 to 400)
+        let detected = false;
+        let isPaused = false;
+
+        function drawStaticElements() {
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, 300, canvas.width, 100);
+
+            // Draw transmitter coil (red)
+            ctx.strokeStyle = '#F00';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(coilX, coilY, 50, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw receiver coil (blue, inside transmitter)
+            ctx.strokeStyle = '#00F';
+            ctx.beginPath();
+            ctx.arc(coilX, coilY, 30, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw gold nugget
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(nuggetX, nuggetY, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawWave() {
+            ctx.strokeStyle = '#00F';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(coilX, coilY);
+            for (let y = coilY; y <= 400; y += 5) {
+                let x_offset = 10 * Math.sin(wavePhase + y / 20);
+                ctx.lineTo(coilX + x_offset, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawEddyCurrents() {
+            if (detected) {
+                ctx.strokeStyle = '#FF0';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(nuggetX, nuggetY, 15 + i * 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawSecondaryWave() {
+            if (detected) {
+                ctx.strokeStyle = '#F00';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(nuggetX, nuggetY);
+                ctx.lineTo(coilX, coilY);
+                ctx.stroke();
+            }
+        }
+
+        function drawAlert() {
+            if (detected) {
+                ctx.fillStyle = '#F00';
+                ctx.font = '20px Arial';
+                ctx.fillText('Gold Nugget Detected!', 50, 50);
+            }
+        }
+
+        function animate() {
+            if (isPaused) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update coil position
+            coilAngle += 0.01;
+            coilX = 300 + 100 * Math.sin(coilAngle);
+
+            // Draw static elements
+            drawStaticElements();
+
+            // Draw electromagnetic wave
+            drawWave();
+
+            // Check for detection
+            detected = Math.abs(coilX - nuggetX) < 20;
+
+            // Draw detection visuals
+            drawEddyCurrents();
+            drawSecondaryWave();
+            drawAlert();
+
+            // Update wave phase
+            wavePhase += 0.1;
+            if (wavePhase > 2 * Math.PI) wavePhase = 0;
+
+            requestAnimationFrame(animate);
+        }
+
+        function toggleAnimation() {
+            isPaused = !isPaused;
+            if (!isPaused) animate();
+        }
+
+        function resetAnimation() {
+            wavePhase = 0;
+            coilAngle = 0;
+            coilX = 300;
+            detected = false;
+            isPaused = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawStaticElements();
+            animate();
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

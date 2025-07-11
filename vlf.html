@@ -14,24 +14,11 @@
             font-family: Arial, sans-serif;
             text-align: center;
         }
-        .controls {
-            margin: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
     <h1>VLF Metal Detector Animation</h1>
     <p>This animation demonstrates a VLF metal detector with the coil flat on the ground, detecting a gold nugget buried beneath.</p>
-    <div class="controls">
-        <button onclick="toggleAnimation()">Pause/Resume</button>
-        <button onclick="resetAnimation()">Reset</button>
-    </div>
     <canvas id="detectorCanvas" width="600" height="400"></canvas>
     <script>
         const canvas = document.getElementById('detectorCanvas');
@@ -44,7 +31,6 @@
         const nuggetX = 400;
         const nuggetY = 350; // Beneath the ground
         let detected = false;
-        let isPaused = false;
 
         function drawGround() {
             ctx.fillStyle = '#8B4513'; // Brown ground
@@ -110,8 +96,6 @@
         }
 
         function animate() {
-            if (isPaused) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Update coil position
@@ -137,24 +121,6 @@
             if (wavePhase > 2 * Math.PI) wavePhase = 0;
 
             requestAnimationFrame(animate);
-        }
-
-        function toggleAnimation() {
-            isPaused = !isPaused;
-            if (!isPaused) animate();
-        }
-
-        function resetAnimation() {
-            wavePhase = 0;
-            coilAngle = 0;
-            coilX = 300;
-            detected = false;
-            isPaused = false;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGround();
-            drawCoil();
-            drawNugget();
-            animate();
         }
 
         // Start animation

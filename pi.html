@@ -18,66 +18,116 @@
 </head>
 <body>
     <h1>Pulse Induction Metal Detector Animation</h1>
-    <p>This animation shows how a pulse induction metal detector sends pulses into the ground to detect a gold nugget.</p>
+    <p>This animation shows a Pulse Induction (PI) metal detector with a coil flat on the ground, moving side to side, detecting a buried gold nugget.</p>
     <canvas id="detectorCanvas" width="600" height="400"></canvas>
     <script>
         const canvas = document.getElementById('detectorCanvas');
         const ctx = canvas.getContext('2d');
 
-        let pulseY = 50;
-        let pulseDirection = 1;
-        let detected = false;
+        let angle = 0;
+        let coilX = 300;
+        const coilY = 300; // Bottom of coil flat on ground at y=300
+        const metalX = 400;
+        const metalY = 350; // Buried beneath ground
         let signalStrength = 0;
+        let pulseCounter = 0;
+        let isPulsing = false;
+        let isListening = false;
+        let pulseDuration = 0;
+        let listenDuration = 0;
 
-        function drawScene() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function drawGround() {
+            ctx.fillStyle = '#8B4513'; // Brown ground
+            ctx.fillRect(0, 300, canvas.width, 100);
+        }
 
-            // Draw ground
-            ctx.fillStyle = '#8B4513';
-            ctx.fillRect(0, 200, canvas.width, 200);
+        function drawCoil() {
+            ctx.fillStyle = isPulsing ? '#00F' : '#333'; // Blue during pulse, gray otherwise
+            ctx.fillRect(coilX - 50, coilY - 10, 100, 10); // Flat on ground, top at y=290, bottom at y=300
+        }
 
-            // Draw metal detector coil
-            ctx.fillStyle = '#333';
-            ctx.fillRect(250, 50, 100, 20);
-
-            // Draw gold nugget
-            ctx.fillStyle = '#FFD700';
+        function drawMetal() {
+            ctx.fillStyle = '#FFD700'; // Gold nugget
             ctx.beginPath();
-            ctx.arc(300, 300, 10, 0, Math.PI * 2);
+            ctx.arc(metalX, metalY, 10, 0, Math.PI * 2);
             ctx.fill();
+        }
 
-            // Draw pulse
-            ctx.strokeStyle = '#00F';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(300, 70);
-            ctx.lineTo(300, pulseY);
-            ctx.stroke();
+        function drawPulse() {
+            if (isPulsing) {
+                ctx.strokeStyle = '#00F'; // Blue pulse lines
+                ctx.lineWidth = 2;
+                for (let dx of [-40, -20, 0, 20, 40]) { // Five lines across the coil
+                    let pulseX = coilX + dx;
+                    ctx.beginPath();
+                    ctx.moveTo(pulseX, 300); // Start at bottom of coil
+                    ctx.lineTo(pulseX, 350); // 50 pixels down into the ground
+                    ctx.stroke();
+                }
+            }
+        }
 
-            // Draw reflected signal if detected
-            if (detected) {
-                ctx.strokeStyle = '#F00';
-                ctx.beginPath();
-                ctx.moveTo(300, pulseY);
-                ctx.lineTo(300, 70);
-                ctx.stroke();
-                ctx.fillStyle = '#F00';
-                ctx.fillText('Gold Detected!', 260, 30);
+        function drawInteraction() {
+            if (isListening && Math.abs(coilX - metalX) < 50) {
+                ctx.strokeStyle = '#FF0'; // Yellow concentric circles
+                ctx.lineWidth = 2;
+                for (let i = 1; i <= 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(metalX, metalY, 10 + i * 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawAlert() {
+            if (signalStrength > 0.8) {
+                ctx.fillStyle = '#F00'; // Red alert text
+                ctx.font = '20px Arial';
+                ctx.fillText('Nugget Detected!', 50, 30);
             }
         }
 
         function animate() {
-            pulseY += pulseDirection * 5;
-            if (pulseY >= 300) {
-                detected = true;
-                pulseDirection = -1;
-                signalStrength = 0.5;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update coil position
+            angle += 0.01;
+            coilX = 300 + 100 * Math.sin(angle);
+
+            // Pulse logic
+            pulseCounter++;
+            if (pulseCounter % 60 === 0) {
+                isPulsing = true;
+                pulseDuration = 5; // Pulse for 5 frames
             }
-            if (pulseY <= 70 && detected) {
-                pulseDirection = 1;
-                detected = false;
+            if (isPulsing) {
+                pulseDuration--;
+                if (pulseDuration <= 0) {
+                    isPulsing = false;
+                    isListening = true;
+                    listenDuration = 10; // Listen for 10 frames
+                }
             }
-            drawScene();
+            if (isListening) {
+                listenDuration--;
+                if (listenDuration <= 0) {
+                    isListening = false;
+                }
+                if (Math.abs(coilX - metalX) < 50) {
+                    signalStrength += 0.1; // Increase signal if over metal
+                }
+            }
+            signalStrength -= 0.01; // Signal decay
+            signalStrength = Math.max(0, Math.min(1, signalStrength)); // Clamp between 0 and 1
+
+            // Draw elements
+            drawGround();
+            drawCoil();
+            drawPulse(); // Show pulse going into the ground
+            drawMetal();
+            drawInteraction();
+            drawAlert();
+
             requestAnimationFrame(animate);
         }
 
